@@ -40,6 +40,9 @@ class FinanceManagerApp:
         add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
         add_button.grid(row=3, column=1)
 
+        delete_button = tk.Button(self.root, text="Delete Expense(s)", command=self.delete_expense)
+        delete_button.grid(row=3, column=0)
+
         self.tree = ttk.Treeview(self.root, columns=("Description", "Amount", "Category"), show="headings")
         self.tree.heading("Description", text="Description")
         self.tree.heading("Amount", text="Amount")
@@ -76,6 +79,27 @@ class FinanceManagerApp:
         self.tree.insert('', tk.END, values=(description, f"${amount:.2f}", category))
         self.description_entry.delete(0, tk.END)
         self.amount_entry.delete(0, tk.END)
+        self.save_data()
+    
+    def delete_expense(self):
+        selected_items = self.tree.selection()
+        if not selected_items:
+            messagebox.showwarning("Warning", "Please select a valid expense to delete.")
+            return
+        
+        item_indices_to_delete = []
+        for item_id in selected_items:
+            row_index = self.tree.index(item_id)
+            item_indices_to_delete.append(row_index)
+
+        item_indices_to_delete.sort(reverse=True)
+
+        for item in item_indices_to_delete:
+            del self.expenses[item]
+
+        for i in selected_items:
+            self.tree.delete(i)
+
         self.save_data()
 
     def display_all_expenses(self):
