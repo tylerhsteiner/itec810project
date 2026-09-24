@@ -35,11 +35,20 @@ class FinanceManagerApp:
 		#so as entries are removed/added, the minimum window size reflects that
 		self.root.minsize(myWindowWidth,myWindowHeight)
 
+		#this allows the window to only be resized vertically, not horizontally. 
+		#it's a bit of a hack, but realistically, vertically is the only direction
+		#one might need to resize it.
+		self.root.resizable(False, True)
+
 
 	def setup_ui(self):
 
 		#var for right side padding
 		rightPad = 20
+
+		#this only allows the bottom button row to actually move with the window when resized vertically.
+		#doing this in python is quite kludgy
+		self.root.rowconfigure(5,weight=1)
 
 		#the sticky param aligns within the grid, in this case, right-aligned 
 		#the padx sets 0 pixels of left padding and 20 pixels of right padding
@@ -71,10 +80,10 @@ class FinanceManagerApp:
 		self.tree.grid(row=4, column=0, columnspan=2)
 
 		summary_button = tk.Button(self.root, text="Show Summary", command=self.show_summary)
-		summary_button.grid(row=5, column=0, pady=10)
+		summary_button.grid(row=5, column=0, pady=10, sticky=tk.E, padx=(0,rightPad))
 
 		visualize_button = tk.Button(self.root, text="Visualize Spending", command=self.visualize_spending)
-		visualize_button.grid(row=5, column=1)
+		visualize_button.grid(row=5, column=1, sticky=tk.W)
 
 	def add_expense(self):
 		description = self.description_entry.get()
