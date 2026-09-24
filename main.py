@@ -79,11 +79,13 @@ class FinanceManagerApp:
 		self.tree.heading("Category", text="Category")
 		self.tree.grid(row=4, column=0, columnspan=2)
 
+		#the sticky param for these buttons manages both L/R and up/down positioning
+		#the pady keeps them in the same place relative to the window bottom during resizing
 		summary_button = tk.Button(self.root, text="Show Summary", command=self.show_summary)
-		summary_button.grid(row=5, column=0, pady=10, sticky=tk.E, padx=(0,rightPad))
+		summary_button.grid(row=5, column=0, sticky=tk.SE, padx=(0,rightPad), pady=(0,10))
 
 		visualize_button = tk.Button(self.root, text="Visualize Spending", command=self.visualize_spending)
-		visualize_button.grid(row=5, column=1, sticky=tk.W)
+		visualize_button.grid(row=5, column=1, sticky=tk.SW, pady=(0,10))
 
 	def add_expense(self):
 		description = self.description_entry.get()
