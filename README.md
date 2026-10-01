@@ -1,5 +1,6 @@
-# itec810project
-# Personal Finance Manager
+# ITEC 810 Project
+
+## Personal Finance Manager
 
 A simple desktop expense-tracking application built with Python and Tkinter.
 
@@ -9,10 +10,13 @@ A simple desktop expense-tracking application built with Python and Tkinter.
 - Validate required fields and expense amounts
 - Prevent zero or negative expense amounts
 - Display expenses in a table
+- Select and delete one or more expenses
+- Disable the Delete button when no transaction is selected
+- Disable Summary and Visualization options when no expenses exist
 - View spending totals by category
 - Visualize spending with a pie chart
 - Save and load expense data using JSON
-- Preserve a minimum window size based on the initial application layout
+- Allow vertical window resizing while maintaining a fixed width
 
 ## Technologies
 
@@ -39,9 +43,19 @@ Run:
 python3 main.py
 ```
 
+## Basic Usage
+
+1. Enter an expense description.
+2. Enter an amount greater than zero.
+3. Select a category.
+4. Click **Add Expense** to add the transaction to the table.
+5. Select one or more transactions and click **Delete Expense(s)** to remove them.
+6. Click **Show Summary** to view spending totals by category.
+7. Click **Visualize Spending** to display a pie chart of spending by category.
+
 ## Data Storage
 
-Expense data is saved locally in:
+Expense data is stored locally in:
 
 ```text
 expenses.json
@@ -53,4 +67,4 @@ Each expense stores:
 - Amount
 - Category
 
-The application automatically loads saved expenses when it starts and saves the current expense list whenever a new expense is added.
+The application automatically loads saved expenses at startup and saves the updated expense list whenever an expense is added or deleted.
