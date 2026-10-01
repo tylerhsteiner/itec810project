@@ -70,6 +70,7 @@ class FinanceManagerApp:
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
 		add_button.grid(row=3, column=1, sticky=tk.W)
 
+		# add's delete button
 		delete_button = tk.Button(self.root, text="Delete Expense(s)", command=self.delete_expense)
 		delete_button.grid(row=3, column=0, sticky=tk.E, padx=(0,rightPad))
 
@@ -115,20 +116,26 @@ class FinanceManagerApp:
     
 	def delete_expense(self):
 		selected_items = self.tree.selection()
+		#add validation for at least one item is selected
 		if not selected_items:
 			messagebox.showwarning("Warning", "Please select a valid expense to delete.")
 			return
-		
+
+		# Figures out the row index of each of the selected item(s)
 		item_indices_to_delete = []
 		for item_id in selected_items:
 			row_index = self.tree.index(item_id)
 			item_indices_to_delete.append(row_index)
 
+		# this reverses the order of the items_to_delete list so that when items are deleted from the list, the indices of the remaining items are not affected. 
+		# VERY IMPORTANT STEP!!!
 		item_indices_to_delete.sort(reverse=True)
 
+		# delete from the data list, which is separate from the treeview table
 		for item in item_indices_to_delete:
 			del self.expenses[item]
 
+		# delete visually from the treeview table
 		for i in selected_items:
 			self.tree.delete(i)
 
