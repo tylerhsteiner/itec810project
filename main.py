@@ -26,7 +26,7 @@ class FinanceManagerApp:
 
 		#update makes sure you have the actual window size as displayed, not the original window size before adding data
 		self.root.update()
-
+		
 		#get the window width and height
 		myWindowWidth = self.root.winfo_width()
 		myWindowHeight = self.root.winfo_height()
