@@ -20,7 +20,8 @@ class FinanceManagerApp:
 		self.root.title("Personal Finance Manager")
 		self.expenses = []
 		self.load_data()
-		
+
+		# Set up main window layout
 		self.setup_ui()
 		self.display_all_expenses()
 
@@ -34,28 +35,20 @@ class FinanceManagerApp:
 		#this makes sure the minimum window size is what the window initially appears as,
 		#so as entries are removed/added, the minimum window size reflects that
 		self.root.minsize(myWindowWidth,myWindowHeight)
-
-		#this allows the window to only be resized vertically, not horizontally. 
-		#it's a bit of a hack, but realistically, vertically is the only direction
-		#one might need to resize it.
-		self.root.resizable(False, True)
-
+		#print("current width: ",myWindowWidth)
+		#print("current height: ",myWindowHeight)
 
 	def setup_ui(self):
+		# Labels and Entry widgets for adding an expense
 
 		#var for right side padding
 		rightPad = 20
-
-		#this only allows the bottom button row to actually move with the window when resized vertically.
-		#doing this in python is quite kludgy
-		self.root.rowconfigure(5,weight=1)
-
 		#the sticky param aligns within the grid, in this case, right-aligned 
 		#the padx sets 0 pixels of left padding and 20 pixels of right padding
 		#so there's some space between the lable and the entry field
 		tk.Label(self.root, text="Description:").grid(row=0, column=0, sticky=tk.E, padx=(0,rightPad))
 		self.description_entry = tk.Entry(self.root,bd=1)
-		
+
 		#this left-aligns the entry field in the grid column
 		self.description_entry.grid(row=0, column=1, sticky=tk.W)
 
@@ -67,6 +60,7 @@ class FinanceManagerApp:
 		self.category_combobox = ttk.Combobox(self.root, values=["Food", "Rent", "Utilities", "Entertainment", "Other"])
 		self.category_combobox.grid(row=2, column=1, sticky=tk.W)
 
+		# Add expense button
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
 		add_button.grid(row=3, column=1, sticky=tk.W)
 
@@ -81,15 +75,15 @@ class FinanceManagerApp:
 		self.tree.grid(row=4, column=0, columnspan=2)
 		self.tree.bind('<<TreeviewSelect>>', self.on_tree_select)
 
-		#the sticky param for these buttons manages both L/R and up/down positioning
-		#the pady keeps them in the same place relative to the window bottom during resizing
+		# Budget and Expense summary buttons
 		summary_button = tk.Button(self.root, text="Show Summary", command=self.show_summary)
-		summary_button.grid(row=5, column=0, sticky=tk.SE, padx=(0,rightPad), pady=(0,10))
+		summary_button.grid(row=5, column=0, pady=10)
 
 		visualize_button = tk.Button(self.root, text="Visualize Spending", command=self.visualize_spending)
-		visualize_button.grid(row=5, column=1, sticky=tk.SW, pady=(0,10))
+		visualize_button.grid(row=5, column=1)
 
 	def add_expense(self):
+		# Add a new expense
 		description = self.description_entry.get()
 		amount = self.amount_entry.get()
 		category = self.category_combobox.get()
@@ -104,13 +98,18 @@ class FinanceManagerApp:
 			messagebox.showerror("Error", "Amount must be a number.")
 			return
 
+        
 		if amount <= 0:
 			messagebox.showerror("Error", "Amount must be greater than zero.")
 			return
 
 		expense = Expense(description, amount, category)
 		self.expenses.append(expense)
+
+		# Add to the TreeView
 		self.tree.insert('', tk.END, values=(description, f"${amount:.2f}", category))
+
+		# Clear entries
 		self.description_entry.delete(0, tk.END)
 		self.amount_entry.delete(0, tk.END)
 		self.save_data()
@@ -140,6 +139,7 @@ class FinanceManagerApp:
 		for i in selected_items:
 			self.tree.delete(i)
 
+		# Save data after adding an expense
 		self.save_data()
 
 		# disable delete button after deleting items
@@ -154,6 +154,7 @@ class FinanceManagerApp:
 			self.delete_button.config(state=tk.DISABLED)
 
 	def display_all_expenses(self):
+		# Load existing expenses into the TreeView on startup
 		for expense in self.expenses:
 			self.tree.insert('', tk.END, values=(expense.description, f"${expense.amount:.2f}", expense.category))
 
@@ -179,17 +180,20 @@ class FinanceManagerApp:
 		plt.show()
 
 	def save_data(self):
+		# Save the current expenses to a JSON file
 		data = [{"description": e.description, "amount": e.amount, "category": e.category} for e in self.expenses]
 		with open("expenses.json", "w") as f:
 			json.dump(data, f)
 
 	def load_data(self):
+		# Load expenses from a JSON file
 		if os.path.exists("expenses.json"):
 			with open("expenses.json", "r") as f:
 				data = json.load(f)
 				self.expenses = [Expense(d["description"], d["amount"], d["category"]) for d in data]
 		else:
 			self.expenses = []
+
 
 if __name__ == "__main__":
 	root = tk.Tk()
