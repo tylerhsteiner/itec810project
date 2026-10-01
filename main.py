@@ -70,15 +70,16 @@ class FinanceManagerApp:
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
 		add_button.grid(row=3, column=1, sticky=tk.W)
 
-		# add's delete button
-		delete_button = tk.Button(self.root, text="Delete Expense(s)", command=self.delete_expense)
-		delete_button.grid(row=3, column=0, sticky=tk.E, padx=(0,rightPad))
+		# add's delete button, start with it disabled
+		self.delete_button = tk.Button(self.root, text="Delete Expense(s)", command=self.delete_expense, state=tk.DISABLED)
+		self.delete_button.grid(row=3, column=0, sticky=tk.E, padx=(0,rightPad))
 
 		self.tree = ttk.Treeview(self.root, columns=("Description", "Amount", "Category"), show="headings")
 		self.tree.heading("Description", text="Description")
 		self.tree.heading("Amount", text="Amount")
 		self.tree.heading("Category", text="Category")
 		self.tree.grid(row=4, column=0, columnspan=2)
+		self.tree.bind('<<TreeviewSelect>>', self.on_tree_select)
 
 		#the sticky param for these buttons manages both L/R and up/down positioning
 		#the pady keeps them in the same place relative to the window bottom during resizing
@@ -140,6 +141,17 @@ class FinanceManagerApp:
 			self.tree.delete(i)
 
 		self.save_data()
+
+		# disable delete button after deleting items
+		self.delete_button.config(state=tk.DISABLED)
+	
+	# event handler for when the user selects an item in the treeview
+	# will enable or disable the delete button based on whether there are items selected
+	def on_tree_select(self, event=None):
+		if self.tree.selection():
+			self.delete_button.config(state=tk.NORMAL)
+		else:
+			self.delete_button.config(state=tk.DISABLED)
 
 	def display_all_expenses(self):
 		for expense in self.expenses:
