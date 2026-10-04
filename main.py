@@ -64,12 +64,28 @@ class FinanceManagerApp:
 		self.amount_entry.grid(row=1, column=1, sticky=tk.W)
 
 		tk.Label(self.root, text="Category:").grid(row=2, column=0, sticky=tk.E, padx=(0,rightPad))
-		self.category_combobox = ttk.Combobox(self.root, values=["Food", "Rent", "Utilities", "Entertainment", "Other"])
+
+		#we're going to use options to (re)load the combobox, so making options global simplifies a lot
+		global options 
+
+		#load options as json data so we can add to them
+		#if there's no existing file, use a default list
+		if os.path.exists("categories.json"):
+			with open("categories.json", "r") as catfile:
+				options = json.load(catfile)
+		else:
+			#default options if no file. 
+			#we only create/append the file if a category is added. if they never need anything
+			#but the defaults, then there's no point in creating the file
+			options = ["Food", "Rent", "Utilities", "Entertainment", "Other"]
+		
+		#we load the combobox from options
+		self.category_combobox = ttk.Combobox(self.root,values=options)		
 		self.category_combobox.grid(row=2, column=1, sticky=tk.W)
 
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
 		add_button.grid(row=3, column=1, sticky=tk.W)
-		
+
 		#this binds the add expenses button to the enter key
 		root.bind('<Return>', (lambda e, add_button=add_button: add_button.invoke()))
 
@@ -98,6 +114,19 @@ class FinanceManagerApp:
 		description = self.description_entry.get()
 		amount = self.amount_entry.get()
 		category = self.category_combobox.get()
+
+		#check to see if entry exists in options
+		entryExists = any(entry == category for entry in options)
+
+		#if not, add it to the list
+		if not entryExists:
+			options.append(category)
+			#update combobox list
+			self.category_combobox['values'] = options
+			#update categories file after adding. This way, the new categories survive app relaunch
+			#we don't care if it's there or not. if it's not there, we just write whatever is in options
+			with open("categories.json", "w") as newData:
+				json.dump(options, newData)
 
 		if not description or not amount or not category:
 			messagebox.showerror("Error", "All fields must be filled out.")
