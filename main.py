@@ -86,7 +86,7 @@ class FinanceManagerApp:
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
 		add_button.grid(row=3, column=1, sticky=tk.W)
 
-		#this binds the add expenses button to the enter key
+		#this binds the add e1xpenses button to the enter key
 		root.bind('<Return>', (lambda e, add_button=add_button: add_button.invoke()))
 
 		# add's delete button, start with it disabled
