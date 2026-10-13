@@ -294,6 +294,7 @@ class FinanceManagerApp:
 
 		# disable delete button after deleting items
 		self.delete_button.config(state=tk.DISABLED)
+		self.edit_button.config(state=tk.DISABLED)
 		self.update_button_states()
 
 	def restore_expense(self):
@@ -303,11 +304,16 @@ class FinanceManagerApp:
 	# event handler for when the user selects an item in the treeview
 	# will enable or disable the delete button based on whether there are items selected
 	def on_tree_select(self, event=None):
+		selected_items = self.tree.selection()
+		num_selected_items = len(selected_items)
 		if self.tree.selection():
 			self.delete_button.config(state=tk.NORMAL)
-			self.edit_button.config(state=tk.NORMAL)
 		else:
 			self.delete_button.config(state=tk.DISABLED)
+
+		if num_selected_items == 1:
+			self.edit_button.config(state=tk.NORMAL)
+		else:
 			self.edit_button.config(state=tk.DISABLED)
 
 	# event handler for when there are no expenses to display
