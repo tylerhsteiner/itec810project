@@ -45,6 +45,7 @@ class FinanceManagerApp:
 
 		#var for right side padding
 		rightPad = 20
+		ui_row = 0
 
 		#this only allows the bottom button row to actually move with the window when resized vertically.
 		#doing this in python is quite kludgy
@@ -53,17 +54,19 @@ class FinanceManagerApp:
 		#the sticky param aligns within the grid, in this case, right-aligned 
 		#the padx sets 0 pixels of left padding and 20 pixels of right padding
 		#so there's some space between the lable and the entry field
-		tk.Label(self.root, text="Description:").grid(row=0, column=0, sticky=tk.E, padx=(0,rightPad))
+		tk.Label(self.root, text="Description:").grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
 		self.description_entry = tk.Entry(self.root,bd=1)
 		
 		#this left-aligns the entry field in the grid column
-		self.description_entry.grid(row=0, column=1, sticky=tk.W)
+		self.description_entry.grid(row=ui_row, column=1, sticky=tk.W)
 
-		tk.Label(self.root, text="Amount:").grid(row=1, column=0, sticky=tk.E, padx=(0,rightPad))
+		ui_row = self.increment_ui_row(ui_row)
+		tk.Label(self.root, text="Amount:").grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
 		self.amount_entry = tk.Entry(self.root,bd=1)
-		self.amount_entry.grid(row=1, column=1, sticky=tk.W)
+		self.amount_entry.grid(row=ui_row, column=1, sticky=tk.W)
 
-		tk.Label(self.root, text="Category:").grid(row=2, column=0, sticky=tk.E, padx=(0,rightPad))
+		ui_row = self.increment_ui_row(ui_row)
+		tk.Label(self.root, text="Category:").grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
 
 		#we're going to use options to (re)load the combobox, so making options global simplifies a lot
 		global options 
@@ -81,34 +84,47 @@ class FinanceManagerApp:
 		
 		#we load the combobox from options
 		self.category_combobox = ttk.Combobox(self.root,values=options)		
-		self.category_combobox.grid(row=2, column=1, sticky=tk.W)
+		self.category_combobox.grid(row=ui_row, column=1, sticky=tk.W)
 
+		ui_row = self.increment_ui_row(ui_row)
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
-		add_button.grid(row=3, column=1, sticky=tk.W)
+		add_button.grid(row=ui_row, column=1, sticky=tk.W)
 
 		#this binds the add e1xpenses button to the enter key
 		root.bind('<Return>', (lambda e, add_button=add_button: add_button.invoke()))
 
+		ui_row = self.increment_ui_row(ui_row)
 		# add's delete button, start with it disabled
 		self.delete_button = tk.Button(self.root, text="Delete Expense(s)", command=self.delete_expense, state=tk.DISABLED)
-		self.delete_button.grid(row=3, column=0, sticky=tk.E, padx=(0,rightPad))
+		self.delete_button.grid(row=ui_row, column=1, sticky=tk.W, padx=(0,rightPad))
 
+		#add restore button, start with it disabled
+		self.restore_button = tk.Button(self.root, text="Restore Expense", command=self.restore_expense, state=tk.DISABLED)
+		self.restore_button.grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
+
+		ui_row = self.increment_ui_row(ui_row)
 		self.tree = ttk.Treeview(self.root, columns=("Description", "Amount", "Category"), show="headings")
 		self.tree.heading("Description", text="Description")
 		self.tree.heading("Amount", text="Amount")
 		self.tree.heading("Category", text="Category")
-		self.tree.grid(row=4, column=0, columnspan=2)
+		self.tree.grid(row=ui_row, column=0, columnspan=2)
 		self.tree.bind('<<TreeviewSelect>>', self.on_tree_select)
 
 		#the sticky param for these buttons manages both L/R and up/down positioning
 		#the pady keeps them in the same place relative to the window bottom during resizing
+		ui_row = self.increment_ui_row(ui_row)
 		self.summary_button = tk.Button(self.root, text="Show Summary", command=self.show_summary)
-		self.summary_button.grid(row=5, column=0, sticky=tk.SE, padx=(0,rightPad), pady=(0,10))
+		self.summary_button.grid(row=ui_row, column=0, sticky=tk.SE, padx=(0,rightPad), pady=(0,10))
 
 		self.visualize_button = tk.Button(self.root, text="Visualize Spending", command=self.visualize_spending)
-		self.visualize_button.grid(row=5, column=1, sticky=tk.SW, pady=(0,10))
+		self.visualize_button.grid(row=ui_row, column=1, sticky=tk.SW, pady=(0,10))
 
 		self.update_button_states()
+
+	def increment_ui_row(self, ui_row):
+		#returns next row in ui to minimize manual increments
+		ui_row = ui_row + 1
+		return ui_row
 
 	def add_expense(self):
 		description = self.description_entry.get()
@@ -180,6 +196,10 @@ class FinanceManagerApp:
 		# disable delete button after deleting items
 		self.delete_button.config(state=tk.DISABLED)
 		self.update_button_states()
+
+	def restore_expense(self):
+		#placeholder for undo delete and restore expenses
+		return
 	
 	# event handler for when the user selects an item in the treeview
 	# will enable or disable the delete button based on whether there are items selected
