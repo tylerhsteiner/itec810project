@@ -171,7 +171,10 @@ class FinanceManagerApp:
 		self.update_button_states()
 
 	def edit_expense(self, event=None):
-		rightPad = 20
+		#handles double-clicking headers or empty-areas that won't populate selections
+		if event and not self.tree.identify_row(event.y):
+			return
+			
 		#Gets selected item and validates. Edit only allows single selection
 		selected_items = self.tree.selection()
 		if not selected_items:
@@ -180,9 +183,8 @@ class FinanceManagerApp:
 		if len(selected_items) > 1:
 			messagebox.showerror("Error", "Please select only one expense to edit.")
 			return
-		#handles double-clicking headers or empty-areas that won't populate selections
-		if event and not self.tree.identify_row(event.y):
-			return
+		
+		rightPad = 20
 
 		#Gets the values of the selected item
 		item_id = selected_items[0]
@@ -193,6 +195,8 @@ class FinanceManagerApp:
 		edit_window.title("Edit Expense")
 		
 		edit_window.transient(self.root)
+		#IMPORTANT WAIT - necessary so window is drawn before grabbing focus which will cause error
+		edit_window.wait_visibility()
 		edit_window.grab_set()
 		edit_window.resizable(False, False)
 
