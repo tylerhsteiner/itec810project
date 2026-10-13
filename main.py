@@ -93,6 +93,9 @@ class FinanceManagerApp:
 		#this binds the add e1xpenses button to the enter key
 		root.bind('<Return>', (lambda e, add_button=add_button: add_button.invoke()))
 
+		self.edit_button = tk.Button(self.root, text="Edit Expense", command=self.edit_expense, state=tk.DISABLED)
+		self.edit_button.grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
+
 		ui_row = self.increment_ui_row(ui_row)
 		# add's delete button, start with it disabled
 		self.delete_button = tk.Button(self.root, text="Delete Expense(s)", command=self.delete_expense, state=tk.DISABLED)
@@ -165,6 +168,93 @@ class FinanceManagerApp:
 		self.amount_entry.delete(0, tk.END)
 		self.save_data()
 		self.update_button_states()
+
+	def edit_expense(self):
+		rightPad = 20
+		#Gets selected item and validates. Edit only allows single selection
+		selected_items = self.tree.selection()
+		if not selected_items:
+			messagebox.showwarning("Warning", "Please select a valid expense to edit.")
+			return
+		if len(selected_items) > 1:
+			messagebox.showerror("Error", "Please select only one expense to edit.")
+			return
+		#Gets the values of the selected item
+		item_id = selected_items[0]
+		row_index = self.tree.index(item_id)
+		current_expense = self.expenses[row_index]
+		#Creates a new window for the edit dialog
+		edit_window = tk.Toplevel(self.root)
+		edit_window.title("Edit Expense")
+		
+		edit_window.transient(self.root)
+		edit_window.grab_set()
+		edit_window.resizable(False, False)
+
+		#build UI in the dialog window
+		desc_entry = tk.Entry(edit_window, bd=1)
+		desc_entry.insert(0, current_expense.description)
+
+		amount_entry = tk.Entry(edit_window, bd=1)
+		amount_entry.insert(0, f"{current_expense.amount:.2f}")
+
+		category_combobox = ttk.Combobox(edit_window, values=options)
+		category_combobox.set(current_expense.category)
+
+		tk.Label(edit_window, text="Description").grid(row=0, column=0, sticky=tk.W)
+		desc_entry.grid(row=0, column=1, sticky=tk.W)
+
+		tk.Label(edit_window, text="Amount").grid(row=1, column=0, sticky=tk.W)
+		amount_entry.grid(row=1, column=1, sticky=tk.W)
+
+		tk.Label(edit_window, text="Category").grid(row=2, column=0, sticky=tk.W)
+		category_combobox.grid(row=2, column=1, sticky=tk.W)
+
+		#handler to save_changes and update the entry
+		def save_changes():
+			new_description = desc_entry.get().strip()
+			new_amount = amount_entry.get().strip()
+			new_category = category_combobox.get().strip()
+
+			if not new_description or not new_amount or not new_category:
+				messagebox.showerror("Error", "All fields must be filled out.", parent=edit_window)
+				return
+
+			try:
+				new_amount = float(new_amount)
+			except ValueError:
+				messagebox.showerror("Error", "Amount must be a number.", parent=edit_window)
+				return
+
+			if new_amount <= 0:
+				messagebox.showerror("Error", "Amount must be greater than zero.", parent=edit_window)
+				return
+
+			entryExists = any(entry == new_category for entry in options)
+			if not entryExists:
+				options.append(new_category)
+				self.category_combobox['values'] = options
+				with open("categories.json", "w") as newData:
+					json.dump(options, newData)
+
+			current_expense.description = new_description
+			current_expense.amount = new_amount
+			current_expense.category = new_category
+
+			self.tree.item(item_id, values=(new_description, f"${new_amount:.2f}", new_category))
+			self.save_data()
+			edit_window.destroy()
+
+		#finishes initializing edit_button UI with save/cancel buttons and binds the enter and escape keys to the save_changes and edit_window.destroy functions respectively
+		cancel_button = tk.Button(edit_window, text="Cancel", command=edit_window.destroy)
+		save_button = tk.Button(edit_window, text="Save", command=save_changes)
+		edit_window.bind('<Return>', (lambda e, save_button=save_button: save_button.invoke()))
+		edit_window.bind('<Escape>', lambda e: edit_window.destroy())
+		save_button.grid(row=3, column=1, sticky=tk.W, padx=(0,rightPad))
+		cancel_button.grid(row=3, column=0, sticky=tk.E, padx=(rightPad, 0))
+		desc_entry.focus_set()
+
+
     
 	def delete_expense(self):
 		selected_items = self.tree.selection()
@@ -206,8 +296,10 @@ class FinanceManagerApp:
 	def on_tree_select(self, event=None):
 		if self.tree.selection():
 			self.delete_button.config(state=tk.NORMAL)
+			self.edit_button.config(state=tk.NORMAL)
 		else:
 			self.delete_button.config(state=tk.DISABLED)
+			self.edit_button.config(state=tk.DISABLED)
 
 	# event handler for when there are no expenses to display
 	# disable both summary and visualize buttons when there are no expenses
