@@ -112,6 +112,7 @@ class FinanceManagerApp:
 		self.tree.heading("Category", text="Category")
 		self.tree.grid(row=ui_row, column=0, columnspan=2)
 		self.tree.bind('<<TreeviewSelect>>', self.on_tree_select)
+		self.tree.bind('<Double-1>', self.edit_expense)
 
 		#the sticky param for these buttons manages both L/R and up/down positioning
 		#the pady keeps them in the same place relative to the window bottom during resizing
@@ -169,7 +170,7 @@ class FinanceManagerApp:
 		self.save_data()
 		self.update_button_states()
 
-	def edit_expense(self):
+	def edit_expense(self, event=None):
 		rightPad = 20
 		#Gets selected item and validates. Edit only allows single selection
 		selected_items = self.tree.selection()
@@ -179,6 +180,10 @@ class FinanceManagerApp:
 		if len(selected_items) > 1:
 			messagebox.showerror("Error", "Please select only one expense to edit.")
 			return
+		#handles double-clicking headers or empty-areas that won't populate selections
+		if event and not self.tree.identify_row(event.y):
+			return
+
 		#Gets the values of the selected item
 		item_id = selected_items[0]
 		row_index = self.tree.index(item_id)
