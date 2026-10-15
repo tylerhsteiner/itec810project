@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, Listbox
 import json
 import os
 import matplotlib.pyplot as plt
@@ -40,6 +40,16 @@ class FinanceManagerApp:
 		#one might need to resize it.
 		self.root.resizable(False, True)
 
+	#called when edit categories window is closed
+	def onWindowClose(self,myCategories):
+		#get the categories from the edit window
+		options = myCategories
+		#reload the combobox with the new categories
+		self.category_combobox['values'] = options
+		#write the "new" options to the json file
+		with open("categories.json", "w") as newData:
+			json.dump(options, newData)
+		self.edit_catwindow.destroy()
 
 	def setup_ui(self):
 
@@ -69,7 +79,20 @@ class FinanceManagerApp:
 		tk.Label(self.root, text="Category:").grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
 
 		#we're going to use options to (re)load the combobox, so making options global simplifies a lot
-		global options 
+		#global options 
+
+		# #load options as json data so we can add to them
+		# #if there's no existing file, use a default list
+		# if os.path.exists("categories.json"):
+		# 	with open("categories.json", "r") as catfile:
+		# 		options = json.load(catfile)
+		# else:
+		# 	#default options if no file. 
+		# 	#we only create/append the file if a category is added. if they never need anything
+		# 	#but the defaults, then there's no point in creating the file
+		# 	options = ["Food", "Rent", "Utilities", "Entertainment", "Other"]
+
+		global options
 
 		#load options as json data so we can add to them
 		#if there's no existing file, use a default list
@@ -81,7 +104,7 @@ class FinanceManagerApp:
 			#we only create/append the file if a category is added. if they never need anything
 			#but the defaults, then there's no point in creating the file
 			options = ["Food", "Rent", "Utilities", "Entertainment", "Other"]
-		
+
 		#we load the combobox from options
 		self.category_combobox = ttk.Combobox(self.root,values=options)		
 		self.category_combobox.grid(row=ui_row, column=1, sticky=tk.W)
@@ -122,6 +145,9 @@ class FinanceManagerApp:
 
 		self.visualize_button = tk.Button(self.root, text="Visualize Spending", command=self.visualize_spending)
 		self.visualize_button.grid(row=ui_row, column=1, sticky=tk.SW, pady=(0,10))
+
+		self.editcategory_button = tk.Button(self.root, text="Edit Categories", command=self.edit_categories)
+		self.editcategory_button.grid(row=ui_row,column=2,sticky=tk.SE,pady=(0,10),padx=(0,10))
 
 		self.update_button_states()
 
@@ -169,6 +195,66 @@ class FinanceManagerApp:
 		self.amount_entry.delete(0, tk.END)
 		self.save_data()
 		self.update_button_states()
+
+	def edit_categories(self, event=None):
+		#currently all this does is let you delete categories
+
+		#delete the selected item and rebuild the list
+		def delete_Listbox_selection():
+			selected_index = int(lb.curselection()[0])
+			selected_item = lb.get(selected_index)
+			lbLastItem = lb.size() - 1
+			#if selected_index:
+			categories.remove(selected_item)
+			lb.delete(0,lbLastItem)
+			for category in categories:
+				lb.insert(tk.END, category)
+
+		#enables the delete button when a category is selected
+		def onselect(event):
+			self.edit_catwindow.delete_button.config(state="normal")
+	
+		cat_row = 0
+
+		#create the child window
+		self.edit_catwindow = tk.Toplevel(self.root)
+		self.edit_catwindow.title("Edit Cateogories")
+		self.edit_catwindow.transient(self.root)
+		
+
+		#load categories or use default if no file found
+		if os.path.exists("categories.json"):
+			with open("categories.json", "r") as catfile:
+						categories = json.load(catfile)
+		else:
+			#default options if no file. 
+			#we only create/append the file if a category is added. if they never need anything
+			#but the defaults, then there's no point in creating the file
+			categories = ["Food", "Rent", "Utilities", "Entertainment", "Other"]
+
+		#build and display the listbox
+		lb = Listbox(self.edit_catwindow, selectmode=tk.SINGLE, height=len(categories),width=25)
+		lb.grid(row=cat_row,column=0)
+
+		for category in categories:
+				lb.insert(tk.END, category)
+
+		#bind the selection event
+		lb.bind('<<ListboxSelect>>', onselect)
+		
+		self.edit_catwindow.wait_visibility()
+		self.edit_catwindow.update()
+		self.edit_catwindow.grab_set()
+		self.edit_catwindow.resizable(False,False)
+
+		#add the delete button
+		cat_row = self.increment_ui_row(cat_row)
+		# add's delete button, start with it disabled
+		self.edit_catwindow.delete_button = tk.Button(self.edit_catwindow, command=delete_Listbox_selection, text="Delete Category", state=tk.DISABLED)
+		self.edit_catwindow.delete_button.grid(row=cat_row, column=0, sticky=tk.W, padx=(0,20))
+
+		#when the window is closed, the current categories list is passed to onWindowClose()
+		self.edit_catwindow.protocol('WM_DELETE_WINDOW', lambda: self.onWindowClose(categories))
 
 	def edit_expense(self, event=None):
 		#handles double-clicking headers or empty-areas that won't populate selections
