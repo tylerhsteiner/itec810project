@@ -213,7 +213,37 @@ class FinanceManagerApp:
 		#enables the delete button when a category is selected
 		def onselect(event):
 			self.edit_catwindow.delete_button.config(state="normal")
-	
+
+		def addCategory():
+			def addEntry():
+				newCategory = self.newCategory.get()
+				categories.append(newCategory)
+				lbLastItem = lb.size() -1
+				lb.delete(0,lbLastItem)
+				for category in categories:
+					lb.insert(tk.END, category)
+				self.edit_catwindow.update()
+				self.edit_catwindow.update_idletasks()
+
+			self.add_categorywindow = tk.Toplevel(self.edit_catwindow)
+			self.add_categorywindow.title("Add Category")
+			self.add_categorywindow.transient(self.edit_catwindow)
+			self.add_categorywindow.wait_visibility()
+			self.add_categorywindow.update()
+			self.add_categorywindow.grab_set()
+			self.add_categorywindow.resizable(False,False)
+
+			self.addCatLabel = tk.Label(self.add_categorywindow,text="Enter Category")
+			self.addCatLabel.grid(row=0,column=0)
+
+			self.newCategory = tk.Entry(self.add_categorywindow,bd=1)
+			self.newCategory.grid(row=1,column=0)
+
+			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category", state=tk.NORMAL)
+			self.saveEntry.grid(row=2,column=0)
+
+
+
 		cat_row = 0
 
 		#create the child window
@@ -252,6 +282,10 @@ class FinanceManagerApp:
 		# add's delete button, start with it disabled
 		self.edit_catwindow.delete_button = tk.Button(self.edit_catwindow, command=delete_Listbox_selection, text="Delete Category", state=tk.DISABLED)
 		self.edit_catwindow.delete_button.grid(row=cat_row, column=0, sticky=tk.W, padx=(0,20))
+
+		#add "add"button
+		self.edit_catwindow.add_button = tk.Button(self.edit_catwindow, command=addCategory, text="Add Category", state=tk.NORMAL)
+		self.edit_catwindow.add_button.grid(row=cat_row, column=0,padx=(140,0))
 
 		#when the window is closed, the current categories list is passed to onWindowClose()
 		self.edit_catwindow.protocol('WM_DELETE_WINDOW', lambda: self.onWindowClose(categories))
