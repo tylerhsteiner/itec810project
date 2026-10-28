@@ -197,7 +197,6 @@ class FinanceManagerApp:
 		self.update_button_states()
 
 	def edit_categories(self, event=None):
-		#currently all this does is let you delete categories
 
 		#delete the selected item and rebuild the list
 		def delete_Listbox_selection():
@@ -275,17 +274,27 @@ class FinanceManagerApp:
 		self.edit_catwindow.wait_visibility()
 		self.edit_catwindow.update()
 		self.edit_catwindow.grab_set()
-		self.edit_catwindow.resizable(False,False)
+		#allow the window to be resized vertically
+		self.edit_catwindow.resizable(False,True)
 
 		#add the delete button
 		cat_row = self.increment_ui_row(cat_row)
 		# add's delete button, start with it disabled
 		self.edit_catwindow.delete_button = tk.Button(self.edit_catwindow, command=delete_Listbox_selection, text="Delete Category", state=tk.DISABLED)
-		self.edit_catwindow.delete_button.grid(row=cat_row, column=0, sticky=tk.W, padx=(0,20))
+		self.edit_catwindow.delete_button.grid(row=cat_row, column=0, sticky=tk.SW, padx=(0,20))
 
 		#add "add"button
 		self.edit_catwindow.add_button = tk.Button(self.edit_catwindow, command=addCategory, text="Add Category", state=tk.NORMAL)
-		self.edit_catwindow.add_button.grid(row=cat_row, column=0,padx=(140,0))
+		self.edit_catwindow.add_button.grid(row=cat_row, column=0, sticky=tk.SE, padx=(140,0))
+
+		#making sure we can't minimize this window poorly
+		self.edit_catwindow.update()
+		catWindowWidth = self.edit_catwindow.winfo_width()
+		catWindowHeight = self.edit_catwindow.winfo_height()
+		self.edit_catwindow.minsize(catWindowWidth,catWindowHeight)
+
+		#buttons move when window is sized vertically
+		self.edit_catwindow.rowconfigure(1,weight=1)
 
 		#when the window is closed, the current categories list is passed to onWindowClose()
 		self.edit_catwindow.protocol('WM_DELETE_WINDOW', lambda: self.onWindowClose(categories))
