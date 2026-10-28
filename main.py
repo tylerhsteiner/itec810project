@@ -251,11 +251,11 @@ class FinanceManagerApp:
 
 			self.newCategory = tk.Entry(self.add_categorywindow,bd=1)
 			self.newCategory.grid(row=1,column=0)
+			#this way we don't have to click to start typing
+			self.newCategory.focus_set()
 
 			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category", state=tk.NORMAL)
 			self.saveEntry.grid(row=2,column=0)
-
-
 
 		cat_row = 0
 
