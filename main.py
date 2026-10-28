@@ -198,6 +198,12 @@ class FinanceManagerApp:
 
 	def edit_categories(self, event=None):
 
+		def onAddCategoryWindowCLose(self): {
+			#we don't need to pass data from the add window, we need to force
+			#a refresh of the main category window on close
+
+		}
+
 		#delete the selected item and rebuild the list
 		def delete_Listbox_selection():
 			selected_index = int(lb.curselection()[0])
@@ -215,15 +221,23 @@ class FinanceManagerApp:
 
 		def addCategory():
 			def addEntry():
+				#get new category to add
 				newCategory = self.newCategory.get()
-				categories.append(newCategory)
-				lbLastItem = lb.size() -1
-				lb.delete(0,lbLastItem)
-				for category in categories:
-					lb.insert(tk.END, category)
-				self.edit_catwindow.update()
-				self.edit_catwindow.update_idletasks()
 
+				#append new category to end of category list
+				categories.append(newCategory)
+
+				#blank listbox
+				lb.delete(0,tk.END)
+
+				#rebuild with new category
+				lb.insert(0,*categories)
+
+				#update listbox height to show new category when added!!!!
+				lb.config(height=lb.size())
+				
+
+				
 			self.add_categorywindow = tk.Toplevel(self.edit_catwindow)
 			self.add_categorywindow.title("Add Category")
 			self.add_categorywindow.transient(self.edit_catwindow)
@@ -262,11 +276,11 @@ class FinanceManagerApp:
 			categories = ["Food", "Rent", "Utilities", "Entertainment", "Other"]
 
 		#build and display the listbox
-		lb = Listbox(self.edit_catwindow, selectmode=tk.SINGLE, height=len(categories),width=25)
+		lb = Listbox(self.edit_catwindow, selectmode=tk.SINGLE, listvariable=categories, height=len(categories),width=25)
 		lb.grid(row=cat_row,column=0)
 
-		for category in categories:
-				lb.insert(tk.END, category)
+		#better way to load data
+		lb.insert(0,*categories)
 
 		#bind the selection event
 		lb.bind('<<ListboxSelect>>', onselect)
