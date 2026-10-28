@@ -256,6 +256,9 @@ class FinanceManagerApp:
 
 			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category", state=tk.NORMAL)
 			self.saveEntry.grid(row=2,column=0)
+			#this lets us use the enter key in the add category window. you have to bind the button within the child
+			#window for this to work
+			self.add_categorywindow.bind('<Return>', (lambda e, saveEntry=self.saveEntry: saveEntry.invoke()))
 
 		cat_row = 0
 
