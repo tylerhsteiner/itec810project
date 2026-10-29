@@ -224,17 +224,22 @@ class FinanceManagerApp:
 				#get new category to add
 				newCategory = self.newCategory.get()
 
-				#append new category to end of category list
-				categories.append(newCategory)
+				#check for blank entry
+				if not newCategory:
+					messagebox.showerror("showerror","You cannot add a blank category!")
+				else:
+					#actual category in box
+					#append new category to end of category list
+					categories.append(newCategory)
 
-				#blank listbox
-				lb.delete(0,tk.END)
+					#blank listbox
+					lb.delete(0,tk.END)
 
-				#rebuild with new category
-				lb.insert(0,*categories)
+					#rebuild with new category
+					lb.insert(0,*categories)
 
-				#update listbox height to show new category when added!!!!
-				lb.config(height=lb.size())
+					#update listbox height to show new category when added!!!!
+					lb.config(height=lb.size())
 				
 
 				
@@ -254,12 +259,11 @@ class FinanceManagerApp:
 			#this way we don't have to click to start typing
 			self.newCategory.focus_set()
 
-			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category", state=tk.NORMAL)
+			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category",activeforeground='#104e8b', activebackground='red')
 			self.saveEntry.grid(row=2,column=0)
 			#this lets us use the enter key in the add category window. you have to bind the button within the child
 			#window for this to work
 			self.add_categorywindow.bind('<Return>', (lambda e, saveEntry=self.saveEntry: saveEntry.invoke()))
-
 		cat_row = 0
 
 		#create the child window
