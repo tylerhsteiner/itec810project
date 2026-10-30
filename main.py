@@ -20,6 +20,8 @@ class FinanceManagerApp:
 		self.root.title("Personal Finance Manager")
 		self.expenses = []
 		self.load_data()
+
+		self.deleted_expenses = []
 		
 		self.setup_ui()
 		self.display_all_expenses()
@@ -224,17 +226,22 @@ class FinanceManagerApp:
 				#get new category to add
 				newCategory = self.newCategory.get()
 
-				#append new category to end of category list
-				categories.append(newCategory)
+				#check for blank entry
+				if not newCategory:
+					messagebox.showerror("showerror","You cannot add a blank category!")
+				else:
+					#actual category in box
+					#append new category to end of category list
+					categories.append(newCategory)
 
-				#blank listbox
-				lb.delete(0,tk.END)
+					#blank listbox
+					lb.delete(0,tk.END)
 
-				#rebuild with new category
-				lb.insert(0,*categories)
+					#rebuild with new category
+					lb.insert(0,*categories)
 
-				#update listbox height to show new category when added!!!!
-				lb.config(height=lb.size())
+					#update listbox height to show new category when added!!!!
+					lb.config(height=lb.size())
 				
 
 				
@@ -254,12 +261,11 @@ class FinanceManagerApp:
 			#this way we don't have to click to start typing
 			self.newCategory.focus_set()
 
-			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category", state=tk.NORMAL)
+			self.saveEntry = tk.Button(self.add_categorywindow,command=addEntry, text="Save Category",activeforeground='#104e8b', activebackground='red')
 			self.saveEntry.grid(row=2,column=0)
 			#this lets us use the enter key in the add category window. you have to bind the button within the child
 			#window for this to work
 			self.add_categorywindow.bind('<Return>', (lambda e, saveEntry=self.saveEntry: saveEntry.invoke()))
-
 		cat_row = 0
 
 		#create the child window
@@ -430,6 +436,8 @@ class FinanceManagerApp:
 
 		# delete from the data list, which is separate from the treeview table
 		for item in item_indices_to_delete:
+			# add the deleted expense to the deleted_expenses list before deleting
+			self.deleted_expenses.append(self.expenses[item])
 			del self.expenses[item]
 
 		# delete visually from the treeview table
@@ -443,8 +451,70 @@ class FinanceManagerApp:
 		self.edit_button.config(state=tk.DISABLED)
 		self.update_button_states()
 
+	def restore_selected(self, event=None):
+		#if there is an event, checks to ensure the event is targeting an actual row in the treeview table, and if not, it will return
+		if event and not self.restore_window.tree.identify_row(event.y):
+			return
+		
+		#gets the list of selected items
+		selected_items = self.restore_window.tree.selection()
+		if not selected_items:
+			messagebox.showwarning("Warning", "Please select a valid expense to restore or select 'Cancel' to exit the restore window.", parent=self.restore_window)
+			return
+		
+		to_restore = []
+		#iterates through the list of selected items
+		for item_id in selected_items:
+			row_index = self.restore_window.tree.index(item_id)
+			to_restore.append((row_index, item_id))
+		
+		# Similar to delete, sort reverse by index to prevent shifting on deleting
+		to_restore.sort(reverse=True, key=lambda x: x[0])
+
+		# adds the restored expense back into the main list and the main treeview table
+		# also removes the item from the deleted_expenses list and the deleted expenses treeview table
+		for row_index, item_id in to_restore:
+			expense = self.deleted_expenses.pop(row_index)
+			self.expenses.append(expense)
+			self.tree.insert('', tk.END, values=(expense.description, f"${expense.amount:.2f}", expense.category))
+			self.restore_window.tree.delete(item_id)
+
+		# save and update process similar to add_expense process
+		self.save_data()
+		self.update_button_states()
+
+		self.restore_window.destroy()
+		return
+
 	def restore_expense(self):
-		#placeholder for undo delete and restore expenses
+		# creates the dialog window and sets it on top of the main window
+		self.restore_window = tk.Toplevel(self.root)
+		self.restore_window.title("Restore Expense")
+		self.restore_window.transient(self.root)
+		self.restore_window.wait_visibility()
+		self.restore_window.grab_set()
+		self.restore_window.resizable(False, False)
+
+		# sets up restore and cancel buttons
+		restore_button = tk.Button(self.restore_window, text="Restore Selected", command=self.restore_selected)
+		cancel_button = tk.Button(self.restore_window, text="Cancel", command=self.restore_window.destroy)
+		restore_button.grid(row=1, column=0, padx=10, pady=10)
+		cancel_button.grid(row=1, column=1, padx=10, pady=10)
+
+		# Sets up treeview for displaying recycle bin of deleted items
+		self.restore_window.tree = ttk.Treeview(self.restore_window, columns=("Description", "Amount", "Category"), show="headings")
+		self.restore_window.tree.heading("Description", text="Description")
+		self.restore_window.tree.heading("Amount", text="Amount")
+		self.restore_window.tree.heading("Category", text="Category")
+		self.restore_window.tree.grid(row=0, column=0, columnspan=2)
+
+		# sets up bindings for double-click and escape
+		self.restore_window.tree.bind('<Double-1>', self.restore_selected)
+		self.restore_window.bind('<Escape>', lambda event: self.restore_window.destroy())
+
+		# populates the treeview table similar to display_all_expenses
+		for expense in self.deleted_expenses:
+			self.restore_window.tree.insert('', tk.END, values=(expense.description, f"${expense.amount:.2f}", expense.category))
 		return
 	
 	# event handler for when the user selects an item in the treeview
@@ -464,6 +534,7 @@ class FinanceManagerApp:
 
 	# event handler for when there are no expenses to display
 	# disable both summary and visualize buttons when there are no expenses
+	# enables the restore button only if there are deleted expenses
 	def update_button_states(self):
 		if len(self.expenses) > 0:
 			self.summary_button.config(state=tk.NORMAL)
@@ -471,6 +542,11 @@ class FinanceManagerApp:
 		else:
 			self.summary_button.config(state=tk.DISABLED)
 			self.visualize_button.config(state=tk.DISABLED)
+
+		if len(self.deleted_expenses) > 0:
+			self.restore_button.config(state=tk.NORMAL)
+		else:
+			self.restore_button.config(state=tk.DISABLED)
 
 	def display_all_expenses(self):
 		for expense in self.expenses:
