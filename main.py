@@ -3,16 +3,18 @@ from tkinter import messagebox, ttk, Listbox
 import json
 import os
 import matplotlib.pyplot as plt
+import datetime
 
 # Expense Class to represent individual expenses
 class Expense:
-	def __init__(self, description, amount, category):
+	def __init__(self, date=None, description=None, amount=None, category=None):
 		self.description = description
 		self.amount = float(amount)
 		self.category = category
+		self.date = date
 
 	def __repr__(self):
-		return f"{self.description}: ${self.amount:.2f} [{self.category}]"
+		return f"{self.date } {self.description}: ${self.amount:.2f} [{self.category}]"
 
 class FinanceManagerApp:
 	def __init__(self, root):
@@ -61,7 +63,7 @@ class FinanceManagerApp:
 
 		#this only allows the bottom button row to actually move with the window when resized vertically.
 		#doing this in python is quite kludgy
-		self.root.rowconfigure(5,weight=1)
+		self.root.rowconfigure(6,weight=1)
 
 		#the sticky param aligns within the grid, in this case, right-aligned 
 		#the padx sets 0 pixels of left padding and 20 pixels of right padding
@@ -79,6 +81,7 @@ class FinanceManagerApp:
 
 		ui_row = self.increment_ui_row(ui_row)
 		tk.Label(self.root, text="Category:").grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
+		
 
 		#we're going to use options to (re)load the combobox, so making options global simplifies a lot
 		#global options 
@@ -111,6 +114,12 @@ class FinanceManagerApp:
 		self.category_combobox = ttk.Combobox(self.root,values=options)		
 		self.category_combobox.grid(row=ui_row, column=1, sticky=tk.W)
 
+		# Date columns
+		ui_row = self.increment_ui_row(ui_row)
+		tk.Label(self.root, text="Date:").grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
+		self.date_entry = tk.Entry(self.root,bd=1)
+		self.date_entry.grid(row=ui_row, column=1, sticky=tk.W)
+
 		ui_row = self.increment_ui_row(ui_row)
 		add_button = tk.Button(self.root, text="Add Expense", command=self.add_expense)
 		add_button.grid(row=ui_row, column=1, sticky=tk.W)
@@ -131,7 +140,8 @@ class FinanceManagerApp:
 		self.restore_button.grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
 
 		ui_row = self.increment_ui_row(ui_row)
-		self.tree = ttk.Treeview(self.root, columns=("Description", "Amount", "Category"), show="headings")
+		self.tree = ttk.Treeview(self.root, columns=("Date", "Description", "Amount", "Category"), show="headings")
+		self.tree.heading("Date", text="Date")
 		self.tree.heading("Description", text="Description")
 		self.tree.heading("Amount", text="Amount")
 		self.tree.heading("Category", text="Category")
@@ -516,6 +526,20 @@ class FinanceManagerApp:
 		for expense in self.deleted_expenses:
 			self.restore_window.tree.insert('', tk.END, values=(expense.description, f"${expense.amount:.2f}", expense.category))
 		return
+
+	def validate_date(self, user_input, parent=None):
+		dt = str(user_input).strip()
+		if not dt:
+			return datetime.date.today().isoformat()
+		
+		try:
+			parsed_date = datetime.datetime.strptime(dt, "%Y-%m-%d")
+			if parsed_date.year < 1000:
+				raise ValueError("Year must be 4 digits")
+			return parsed_date.date().isoformat()
+		except ValueError:
+			messagebox.showerror("Error", "Date must be in YYYY-MM-DD format and be a valid calendar date.", parent=parent)
+			return None
 	
 	# event handler for when the user selects an item in the treeview
 	# will enable or disable the delete button based on whether there are items selected
@@ -550,7 +574,7 @@ class FinanceManagerApp:
 
 	def display_all_expenses(self):
 		for expense in self.expenses:
-			self.tree.insert('', tk.END, values=(expense.description, f"${expense.amount:.2f}", expense.category))
+			self.tree.insert('', tk.END, values=(expense.date, expense.description, f"${expense.amount:.2f}", expense.category))
 
 	def get_category_totals(self):
 		category_totals = {}
@@ -582,7 +606,7 @@ class FinanceManagerApp:
 		plt.show()
 
 	def save_data(self):
-		data = [{"description": e.description, "amount": e.amount, "category": e.category} for e in self.expenses]
+		data = [{"date": e.date, "description": e.description, "amount": e.amount, "category": e.category} for e in self.expenses]
 		with open("expenses.json", "w") as f:
 			json.dump(data, f)
 
@@ -590,7 +614,7 @@ class FinanceManagerApp:
 		if os.path.exists("expenses.json"):
 			with open("expenses.json", "r") as f:
 				data = json.load(f)
-				self.expenses = [Expense(d["description"], d["amount"], d["category"]) for d in data]
+				self.expenses = [Expense(d.get("date", "1970-01-01"), d["description"], d["amount"], d["category"]) for d in data]
 		else:
 			self.expenses = []
 
