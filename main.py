@@ -54,6 +54,13 @@ class FinanceManagerApp:
 		self.edit_catwindow.destroy()
 
 	def setup_ui(self):
+		#function to sort the treeview by column when clicking on heading
+		def sort_treeview(tree, col, descending):
+			myData = [(tree.set(item, col), item) for item in tree.get_children('')]
+			myData.sort(reverse=descending)
+			for index, (val, item) in enumerate(myData):
+				tree.move(item, '', index)
+			tree.heading(col, command=lambda: sort_treeview(tree, col, not descending))
 
 		#var for right side padding
 		rightPad = 20
@@ -131,10 +138,14 @@ class FinanceManagerApp:
 		self.restore_button.grid(row=ui_row, column=0, sticky=tk.E, padx=(0,rightPad))
 
 		ui_row = self.increment_ui_row(ui_row)
+
 		self.tree = ttk.Treeview(self.root, columns=("Description", "Amount", "Category"), show="headings")
-		self.tree.heading("Description", text="Description")
-		self.tree.heading("Amount", text="Amount")
-		self.tree.heading("Category", text="Category")
+		#create headings and attach them to the sort_treeview function that allows for the expenses to be sorted
+		#by clicking on the column headings
+		self.tree.heading("Description", text="Description", command=lambda: sort_treeview(self.tree,"Description",False))
+		self.tree.heading("Amount", text="Amount", command=lambda: sort_treeview(self.tree,"Amount",False))
+		self.tree.heading("Category", text="Category", command=lambda: sort_treeview(self.tree,"Category",False))
+		
 		self.tree.grid(row=ui_row, column=0, columnspan=2)
 		self.tree.bind('<<TreeviewSelect>>', self.on_tree_select)
 		self.tree.bind('<Double-1>', self.edit_expense)
